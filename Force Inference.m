@@ -1,11 +1,3 @@
-(* ::Package:: *)
-
-BeginPackage["ForceInference`"];
-
-
-(* ::Section:: *)
-(*Associated funcs*)
-
 
 segmentImage[binarizedMask_?ImageQ,opt:"ConnectedComponents"|"Watershed":"Watershed",
 threshCellsize_:20000]:= Module[{seg,areas,
@@ -40,13 +32,10 @@ members = ParallelMap[Block[{elems},
  elems = Dilation[ReplaceImageValue[ConstantImage[0,Reverse@dim],#->1],1];
  DeleteCases[Union@Flatten@ImageData[elems*Image[segt]],0.]
  ]&,pts]; 
- 
-vertices = Cases[Thread[Round@members-> pts],HoldPattern[pattern:{__}/;Length@pattern >= 2 -> _]];
+ vertices = Cases[Thread[Round@members-> pts],HoldPattern[pattern:{__}/;Length@pattern >= 2 -> _]];
 (* finding vertices with 2 or more neighbouring cells *)
-
 nearest = Nearest[Reverse[vertices, 2]]; (* nearest func for candidate vertices *)
 Fn = GroupBy[MapAt[Sort,(#-> nearest[#,{All,3}]&/@Values[vertices]),{All,2}],Last->First,#]&;
-
 Which[Not@stringentQ,
  (* merge if candidate vertices are 2 manhattan blocks away. Not a stringent check for merging *)
  KeyMap[Union@*Flatten]@Fn[List@*N@*Mean]//Normal,
@@ -272,16 +261,3 @@ pressurecolours=ColorData["Rainbow"][#]&/@Rescale[(pvals[[collabels]])];
 Print["Pressure map:"];
 Print@Show[Graphics@Riffle[pressurecolours,poly[[collabels]]],edgeImg]; 
 ];
-
-
-(* ::Section:: *)
-(*End Package*)
-
-
-Begin["`Private`"];
-
-
-EndPackage[];
-
-
-End[];
