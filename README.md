@@ -5,4 +5,4 @@ a Mathematica implementation of the `Bayesian Force Inference` technique by Ishi
 ![alt-text](https://github.com/alihashmiii/Force-Inference/blob/master/for%20ReadMe/image1.png)
 
 
-![alt-text](https://github.com/alihashmiii/Force-Inference/blob/master/for%20ReadMe/image2.png)
+![alt-text](https://github.com/alihashmiii/Force-Inference/blob/master/for%20ReadMe/im2.png)
