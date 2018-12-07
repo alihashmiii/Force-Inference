@@ -2,5 +2,4 @@
 
 a Mathematica implementation of the `Bayesian Force Inference` technique by Ishihara and Sugimura 
 
-
-under development :: code and results will be released in a couple of days.
+![alt-text](https://github.com/alihashmiii/Force-Inference/blob/master/for%20ReadMe/img1.png)
