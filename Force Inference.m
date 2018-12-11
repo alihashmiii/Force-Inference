@@ -65,7 +65,12 @@ Which[Not@stringentQ,
 (*Force Inference*)
 
 
-ForceInference[filename_]:=Module[{Img,segmentation,maxcellLabels,cellsToVertices,vertexnum,edges,smalledges,maxedgeLabels,edgeEndPoints,nearest,nearestedgeEndPoints,edge2pixLabels,pos,oldCoords,vertexAssoc,vertexToCells,filteredvertices,filteredvertexnum,relabelvert,edgeLabels,edgenum,spArrayTx,spArrayTy,vertexCoordinatelookup,vertexpairs,vertexvertexConn,inds,edgelabelToVert,vertToedges,cols,colsOrder,edgeImg,tensinds,tx,ty,spArrayPx,spArrayPy,spArrayX,spArrayY,pvals,pressurecolours,ptsEdges,ord,k,v,edgeptAssoc,poly,pts,mean,sol,spA,spB,spb,spg,SMatrix,h,Q,R,H,n,m,p,logL,\[Mu],\[Tau],tvals,orderpts,ordering,cellToVertexLabels,delV,cellToAllVertices,removecollabels,collabels,range=10.0^Range[-1.5,1.5,0.1]},
+ForceInference[filename_]:=Module[{Img,segmentation,maxcellLabels,cellsToVertices,vertexnum,edges,smalledges,maxedgeLabels,
+edgeEndPoints,nearest,nearestedgeEndPoints,edge2pixLabels,pos,oldCoords,vertexAssoc,vertexToCells,filteredvertices,filteredvertexnum,
+relabelvert,edgeLabels,edgenum,spArrayTx,spArrayTy,vertexCoordinatelookup,vertexpairs,vertexvertexConn,inds,edgelabelToVert,vertToedges,
+cols,colsOrder,edgeImg,tensinds,tx,ty,spArrayPx,spArrayPy,spArrayX,spArrayY,pvals,pressurecolours,ptsEdges,ord,k,v,edgeptAssoc,poly,pts,
+mean,sol,spA,spB,spb,spg,SMatrix,h,Q,R,H,n,m,p,logL,\[Mu],\[Tau],tvals,orderpts,ordering,cellToVertexLabels,delV,cellToAllVertices,
+removecollabels,collabels,range=10.0^Range[-1.5,1.5,0.1]},
 LaunchKernels[];
 Img= ColorConvert[Import[filename],"Grayscale"];
 Print[Image[Img,ImageSize->Medium]];
@@ -113,12 +118,14 @@ vertexToCells=Reverse[MapAt[vertexAssoc[#]&,MapAt[Flatten,cellsToVertices,{All,2
 (* Tension*)
 filteredvertices=Keys@Select[<|vertexToCells|>,(Length[#]>2&)];
 filteredvertexnum=Length@filteredvertices;
-(* till above we have isolated all vertices that share three edges; we can relabel those filtered vertices to be the rows of the matrix *)
+(* till above we have isolated all vertices that share three edges; we can relabel those filtered vertices to be the rows of the 
+matrix *)
 relabelvert=AssociationThread[filteredvertices-> Range[Length@filteredvertices]];
 (* all edges are relabeled to have a unique identity *)
 edgeLabels=AssociationThread[Range[Length@#]->#]&[nearestedgeEndPoints];
 edgenum=Max[Keys@edgeLabels];
-vertexCoordinatelookup=AssociationMap[Reverse,vertexAssoc];(* given the vertex label \[Rule] get the coordinates from the original lookup *)
+vertexCoordinatelookup=AssociationMap[Reverse,vertexAssoc];(* given the vertex label \[Rule] get the coordinates from the 
+original lookup *)
 vertexpairs=Map[vertexAssoc,nearestedgeEndPoints,{2}];
 (* edge coordinates to vertex label. take vertices one by one and find all the edges it is a part of. None should be less than 3 *)
 vertexvertexConn= ParallelTable[
@@ -232,13 +239,16 @@ R=DiagonalMatrix[Sign[Diagonal@R]].R;
 H=R[[;;#,;;#]]&@DimspB;
 \!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\)=R[[;;#,#+1]]&@DimspB;
 h=R[[#+1,#+1]]&@DimspB;
-logL=-(n-m+1)*Log[h^2]+Total[Log[Diagonal[\[Mu] (spB\[Transpose].spB)]["NonzeroValues"]]]-2*Total[Log[Diagonal[H[[1;;-2,1;;-2]]]["NonzeroValues"]]]
-(*logL=Log[((2.0 \[Pi] \[ExponentialE] h^2)/(n-m+1))^(-((n-m+1)/2))]+0.5*Total[Log[Diagonal[\[Mu] (spB\[Transpose].spB)]["NonzeroValues"]]]-0.5*Total[Log[Diagonal[H[[1;;-2,1;;-2]]]["NonzeroValues"]]]*)
+logL=-(n-m+1)*Log[h^2]+Total[Log[Diagonal[\[Mu] (spB\[Transpose].spB)]["NonzeroValues"]]] - 
+2*Total[Log[Diagonal[H[[1;;-2,1;;-2]]]["NonzeroValues"]]]
+(*logL=Log[((2.0 \[Pi] \[ExponentialE] h^2)/(n-m+1))^(-((n-m+1)/2))]+
+0.5*Total[Log[Diagonal[\[Mu] (spB\[Transpose].spB)]["NonzeroValues"]]]-0.5*Total[Log[Diagonal[H[[1;;-2,1;;-2]]]["NonzeroValues"]]]*)
 ),{\[Mu],ls}]
 ]
 ];
 
-Print[ListPlot[{sol,sol},Joined-> {True,False},PlotStyle->{{Red,Thick},{PointSize[0.02],Black}},AxesStyle->{{Black},{Black}},AxesLabel->{"index \[Mu]","LogLikelihood"},Background->LightBlue]];
+Print[ListPlot[{sol,sol},Joined-> {True,False},PlotStyle->{{Red,Thick},{PointSize[0.02],Black}},
+AxesStyle->{{Black},{Black}},AxesLabel->{"index \[Mu]","LogLikelihood"},Background->LightBlue]];
 \[Mu]=Keys@@MaximalBy[Thread[range-> sol],Values,1];
 Print["optimized value of \[Mu]: ",\[Mu]];
 \[Tau]=Sqrt[\[Mu]];
