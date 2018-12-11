@@ -2,7 +2,7 @@
 
 `@Author: Ali Hashmi`
 
-`To Do: make the code a bit more modular`  
+`To Do: The code is working perfectly fine but I would like to make it a bit more modular`  
 
 This is a Mathematica implementation of the `Bayesian Force Inference` technique by Ishihara and Sugimura (Journal of Theoretical Biology, 2012). The script file `Force Inference.m` will infer tension between epithelial cells and the pressure within the cells by using a binarized image of an epithelia. 
 
