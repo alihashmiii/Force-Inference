@@ -169,7 +169,7 @@ With[{cellToAllVerticesT= GroupBy[Flatten[Thread/@cellToVertexLabelsT],First-> L
 Do[
 neighbouringCells= vertexToCells[[i,2]]; (* for vertex, the neighbouring cell labels *)
 bisectionlabels=Intersection[cellToAllVerticesT[#],edgeVertexPart[i]]&/@neighbouringCells ;
-{px,py}=If[Length[neighbouringCells]>2 && MatchQ[bisectionlabels,{Repeated[{_,_},{3,\[Infinity]}]}],
+If[Length[neighbouringCells]>2 && MatchQ[bisectionlabels,{Repeated[{_,_},{3,\[Infinity]}]}],
 (vertexcoords=DeleteDuplicates[vertexCoordinatelookup[#]&/@Flatten@bisectionlabels];
 centroid=Mean@vertexcoords;
 orderingT=Ordering[ArcTan[Last@#-Last@centroid,First@#-First@centroid]&/@vertexcoords];
