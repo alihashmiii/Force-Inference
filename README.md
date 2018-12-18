@@ -19,3 +19,7 @@ https://www.biorxiv.org/content/early/2018/11/23/475012 (for more details, check
 
 
 ![alt-text](https://github.com/alihashmiii/Force-Inference/blob/master/for%20ReadMe/im4.png)
+
+
+#### Super VIP Cheatsheet
+<a href="https://github.com/alihashmiii/Force-Inference/blob/master/robustness%20check.pdf"><img src= "https://github.com/alihashmiii/Force-Inference/blob/master/for%20ReadMe/robustnesscheckImg.png" alt="Illustration" width="400px"/></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
