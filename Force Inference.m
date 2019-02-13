@@ -249,10 +249,9 @@ edgeEndPoints=Delete[edgeEndPoints,Partition[smalledges,1]];
 nearestedgeEndPoints=Map[Flatten@*nearest,edgeEndPoints,{2}];
 vertexAssoc= AssociationThread[Flatten[Values@cellsToVertices,1],Range@vertexnum];
 vertexToCells=Reverse[MapAt[vertexAssoc[#]&,MapAt[Flatten,cellsToVertices,{All,2}],{All,2}],2];
-(* Tension*)
 filteredvertices=Keys@Select[<|vertexToCells|>,(Length[#]>2&)];
 filteredvertexnum=Length@filteredvertices;
-(* till above we have isolated all vertices that share three edges; we can relabel those filtered vertices to be the 
+(* till above we have isolated all vertices that share >= 3 edges; we can relabel those filtered vertices to be the 
 rows of the matrix *)
 relabelvert=AssociationThread[filteredvertices-> Range[Length@filteredvertices]];
 (* all edges are relabeled to have a unique identity *)
