@@ -4,6 +4,7 @@
 (*Force Inference*)
 
 
+(* Scheme for segmenting the binarized mask *)
 segmentImage[binarizedMask_?ImageQ,border: True|False]:=
 Which[!border,
 Print["border not present, segmenting with morphological components"];
@@ -13,7 +14,7 @@ Print["border exists, segmenting with watershed components"];
 WatershedComponents[binarizedMask, CornerNeighbors->False]
 ];
 
-
+(* Find intermediate pixels connecting two pixels *)
 bresenhamLine[p0_,p1_]:=Module[{dx,dy,sx,sy,err,newp},
 {dx,dy}=Abs[p1-p0];
 {sx,sy}=Sign[p1-p0];
@@ -22,7 +23,7 @@ newp[{x_,y_}]:=With[{e2=2 err},{If[e2>-dy,err-=dy;x+sx,x],If[e2<dx,err+=dx;y+sy,
 NestWhileList[newp,p0,#=!=p1&,1]
 ];
 
-
+(* Artifically close cells if the surrounding/peripheral cells are open *)
 closeImage[image_]:=Module[{morphImage, morphImagePos,posConv,ptsOrdered},
 morphImage=MorphologicalTransform[image,"SkeletonEndPoints"];
 morphImagePos=PixelValuePositions[morphImage,1];
@@ -33,7 +34,7 @@ DeleteDuplicates@Flatten[bresenhamLine@@@Partition[ptsOrdered,2,1,1],1]
 ReplacePixelValue[image,posConv-> 1]
 ];
 
-
+(* Associate cells to their respective vertices *)
 Options[associateVertices]= {"stringentCheck"-> True};
 associateVertices[img_,segt_,OptionsPattern[]]:= With[{dim =Reverse@ImageDimensions@img,stringentQ=OptionValue["stringentCheck"]},
 Module[{pts,members,vertices,nearest,vertexset,likelymergers,imagegraph,imggraphweight,imggraphpts,vertexpairs,posVertexMergers,
@@ -70,7 +71,7 @@ KeyMap[Union@*Flatten]@vertexset//Normal]
  ]
 ]; 
 
-
+(* Generate the relevant matrices for computation *)
 formAndComputeMatrices[vertexCoordinatelookup_,inds_,colsOrder_,edgenum_,delV_,vertexToCells_,vertexvertexConn_,
 maxcellLabels_,filteredvertices_,vertexAssoc_]:= 
 Module[{tx,ty,tensinds,filteredvertexnum,relabelvert,spArrayTx,spArrayTy,spArrayPx,spArrayPy,spArrayX,spArrayY,$filteredvertices},
@@ -126,8 +127,7 @@ spArrayY=Join[spArrayTy,spArrayPy,2];
 {spArrayX,spArrayY,Dimensions[spArrayTx],Dimensions[spArrayPx]}
 ];
 
-
-(* maximize Log-likelihood function *)
+(* Maximize Log-likelihood Function *)
 maximizeLogLikelihood[spArrayX_,spArrayY_,dimTx_,dimPx_]:= Module[{range=10.0^Range[-1.5,1.5,0.1],sol,spA,spg,spB,n,m,
 spb,\[Tau],SMatrix,Q,R,H,h,logL,\[Mu],p},
 Print[Style["\nwith maximum likelihood",Bold,18]];
@@ -166,7 +166,7 @@ H=R[[;;#,;;#]]&@DimspB;
 p=PseudoInverse[H].\!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\); p
 ];
 
-
+(* Generate plots for tension and pressure map *)
 plotMaps[p_,segmentation_,edgeImg_,maxcellLabels_,dimTx_,vertexToCells_,vertexCoordinatelookup_,edgeLabels_,border_]:= 
 Module[{cellToVertexLabels,cellToAllVertices,ptsEdges,k,v,ord,edgeptAssoc,poly,pts,mean,ordering,orderpts,tvals,cols,pvals,
 removecollabels,collabels,pressurecolours},
@@ -203,7 +203,7 @@ Print@Show[Graphics@Riffle[pressurecolours,poly[[collabels]]],edgeImg]
 
 
 (* ::Section:: *)
-(*Mains*)
+(*Main*)
 
 
 ForceInference[filename_,Imgborder:True|False:True]:=
