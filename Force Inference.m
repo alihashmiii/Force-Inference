@@ -39,32 +39,32 @@ Options[associateVertices]= {"stringentCheck"-> True};
 associateVertices[img_,segt_,OptionsPattern[]]:= With[{dim =Reverse@ImageDimensions@img,stringentQ=OptionValue["stringentCheck"]},
 Module[{pts,members,vertices,nearest,vertexset,likelymergers,imagegraph,imggraphweight,imggraphpts,vertexpairs,posVertexMergers,
 meanVertices,Fn},
-pts = ImageValuePositions[MorphologicalTransform[img,{"Fill","SkeletonBranchPoints"}], 1];
 (* finding branch points *)
+pts = ImageValuePositions[MorphologicalTransform[img,{"Fill","SkeletonBranchPoints"}], 1];
 members = ParallelMap[Block[{elems},
  elems = Dilation[ReplaceImageValue[ConstantImage[0,Reverse@dim],#->1],1];
  DeleteCases[Union@Flatten@ImageData[elems*Image[segt]],0|0.]
- ]&,pts]; 
+ ]&,pts];
+(* extract vertices with 2 or more neighbouring cells *)
 vertices = Cases[Thread[Round@members-> pts],HoldPattern[pattern:{__}/;Length@pattern >= 2 -> _]];
-(* vertices with 2 or more neighbour cells *)
 nearest = Nearest[Reverse[vertices, 2]]; (* nearest func for candidate vertices *)
 Fn = GroupBy[MapAt[Sort,(#-> nearest[#,{All,3}]&/@Values[vertices]),{All,2}],Last->First,#]&;
 Which[Not@stringentQ,
-(* merge if candidate vertices are 2 manhattan blocks away. Not a stringent check for merging *)
+(* merge if candidate vertices are 2 units away (distance function can be provided if need be). Not a stringent check for merging *)
 KeyMap[Union@*Flatten]@Fn[List@*N@*Mean]//Normal,
 stringentQ,
-(* a better check is to see the pixels separating the vertices are less than 3 blocks *)
+(* a better check is to see if the pixels separating the vertices are less than 3 units away *)
 vertexset = Fn[Identity];
 (* candidates for merging*)
 likelymergers = Cases[Normal[vertexset],PatternSequence[{{__Integer}..}-> i:{__List}/;Length[i]>= 2]];
-(*defining graph properties of the image *)
+(*defining image as a graph and extracting associated properties *)
 imagegraph = MorphologicalGraph@MorphologicalTransform[img,{"Fill"}];
 imggraphweight = AssociationThread[(EdgeList[imagegraph]/.UndirectedEdge->List )-> PropertyValue[imagegraph,EdgeWeight]];
 imggraphpts = Nearest@Reverse[Thread[VertexList[imagegraph]-> PropertyValue[imagegraph,VertexCoordinates]],2];
 (* corresponding nodes on the graph *)
 vertexpairs = Union@*Flatten@*imggraphpts/@(Values[likelymergers]);
-(* find pairs < than 3 edgeweights away, take a mean of vertices and update the association with mean position *)
-posVertexMergers = Position[Thread[Lookup[imggraphweight,vertexpairs]< 3],True];
+(* find pairs < than 3 edgeweights away, take the mean of vertices and update the association with mean position *)
+posVertexMergers = Position[Thread[Lookup[imggraphweight,vertexpairs] < 3],True];
 If[posVertexMergers != {},
 meanVertices = MapAt[List@*N@*Mean,likelymergers,Thread[{Flatten@posVertexMergers,2}]];
 Scan[(vertexset[#[[1]]]=#[[2]])&,meanVertices]];
