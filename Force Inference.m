@@ -213,22 +213,23 @@ edgeLabels,edgenum,spArrayTx,spArrayTy,vertexCoordinatelookup,vertexpairs,vertex
 vertToedges,edgeImg,colsOrder,p,spArrayX,spArrayY,dimTx,dimPx},
 
 LaunchKernels[];
-ImgC=Img=Binarize@ColorConvert[Import[filename],"Grayscale"];
+ImgC = Img = Binarize@ColorConvert[Import[filename],"Grayscale"];
 If[Not@Imgborder,Img=closeImage@Img];
 Print[Image[Img,ImageSize->Medium]];
+(* cells segmented *)
 segmentation = segmentImage[Img,Imgborder];
 Print[Colorize@segmentation];
 Print["Image segmented: ", Style["\[CheckmarkedBox]",20]];
 maxcellLabels = Max@Values@ComponentMeasurements[segmentation,"LabelCount"];
+(* cells are associated to their vertices *)
 cellsToVertices = associateVertices[Img,segmentation];
 Print["vertices found and associated: ", Style["\[CheckmarkedBox]",20]];
-vertexnum=Length@cellsToVertices;
-
-edges=MorphologicalComponents@ImageFilter[If[#[[3,3]] == 1 && Total[#[[2;;-2,2;;-2]],2] == 3, 1, 0]&,ImgC,2];
-(* associate vertices with all edges. for pixel value 1 edge find two nearest pts. for all edges <3, merge the pts together;
+vertexnum = Length@cellsToVertices;
+(* edges are generated *)
+edges = MorphologicalComponents@ImageFilter[If[#[[3,3]] == 1 && Total[#[[2;;-2,2;;-2]],2] == 3, 1, 0]&, ImgC, 2];
+(* associate vertices with edges. For all edges < 3 pixels remove them by merging the pts together; 
 make changes to the cellToVertex *)
-(* edges to be deleted *)
-smalledges=Flatten[Position[Values@ComponentMeasurements[edges,"Count"],1|2]];
+smalledges = Flatten[Position[Values@ComponentMeasurements[edges,"Count"], 1|2]];
 maxedgeLabels=Max@edges;
 edgeEndPoints=With[{comp=Values@ComponentMeasurements[edges,"Mask"]},
 ParallelTable[
@@ -236,51 +237,51 @@ If[Total[#] == 1,ImageValuePositions[#,1],
 ImageValuePositions[MorphologicalTransform[#,"SkeletonEndPoints"],1]]&@Binarize@Image[comp[[i]]],
 {i,maxedgeLabels}]
 ];
-(* for small edge: if one pixel delete *)
-edges=Fold[If[Length@edgeEndPoints[[#2]]==1,#1/.#2 -> 0,#1]&,edges,smalledges];
-nearest=Nearest@Flatten[Values[cellsToVertices],1];
-nearestedgeEndPoints=Map[Flatten@*nearest,edgeEndPoints,{2}];
-(* if edge is two pixels then put average value in the cellsToVertices: *)
-edge2pixLabels=Keys@Cases[ComponentMeasurements[edges,"Count"],HoldPattern[_-> 2]];
+(* for a small edge i.e.  < 1 pixel -> delete *)
+edges = Fold[If[Length@edgeEndPoints[[#2]]==1,#1/.#2 -> 0,#1]&,edges,smalledges];
+nearest = Nearest@Flatten[Values[cellsToVertices],1];
+nearestedgeEndPoints = Map[Flatten@*nearest,edgeEndPoints,{2}];
+(* if an edge is 2 pixels then put average value of pts in cellsToVertices *)
+edge2pixLabels = Keys@Cases[ComponentMeasurements[edges,"Count"], HoldPattern[_-> 2]];
 If[edge2pixLabels!={},
-(oldCoords=nearestedgeEndPoints[[#]];
-pos=Position[cellsToVertices,#,Infinity]&/@oldCoords;
-cellsToVertices=Fold[ReplacePart[#1,#2-> Mean@oldCoords]&,cellsToVertices,pos]
+(oldCoords = nearestedgeEndPoints[[#]];
+pos = Position[cellsToVertices,#,Infinity]&/@oldCoords;
+cellsToVertices = Fold[ReplacePart[#1,#2-> Mean@oldCoords]&,cellsToVertices,pos]
 )&/@edge2pixLabels
 ];
-edges=ArrayComponents[edges/.Thread[edge2pixLabels-> 0]];
+edges = ArrayComponents[edges/.Thread[edge2pixLabels-> 0]];
 Print["edges found and associated: ", Style["\[CheckmarkedBox]",20]];
 
-cellsToVertices=Normal@AssociationMap[Reverse,GroupBy[cellsToVertices,Last-> First,Union@*Flatten]];
-vertexnum=Length@cellsToVertices; (* Length@Flatten[Values@cellsToVertices,1]; *)
-nearest=Nearest@Flatten[Values@cellsToVertices,1];
-edgeEndPoints=Delete[edgeEndPoints,Partition[smalledges,1]];
-nearestedgeEndPoints=Map[Flatten@*nearest,edgeEndPoints,{2}];
-vertexAssoc= AssociationThread[Flatten[Values@cellsToVertices,1],Range@vertexnum];
-vertexToCells=Reverse[MapAt[vertexAssoc[#]&,MapAt[Flatten,cellsToVertices,{All,2}],{All,2}],2];
-filteredvertices=Keys@Select[<|vertexToCells|>,(Length[#]>2&)];
-filteredvertexnum=Length@filteredvertices;(* till above we have isolated all vertices that share three or more edges; 
+cellsToVertices = Normal@AssociationMap[Reverse,GroupBy[cellsToVertices,Last-> First,Union@*Flatten]];
+vertexnum = Length@cellsToVertices; (* Length@Flatten[Values@cellsToVertices,1]; *)
+nearest = Nearest@Flatten[Values@cellsToVertices,1];
+edgeEndPoints = Delete[edgeEndPoints,Partition[smalledges,1]];
+nearestedgeEndPoints = Map[Flatten@*nearest,edgeEndPoints,{2}];
+vertexAssoc = AssociationThread[Flatten[Values@cellsToVertices,1],Range@vertexnum];
+vertexToCells = Reverse[MapAt[vertexAssoc[#]&,MapAt[Flatten,cellsToVertices,{All,2}],{All,2}],2];
+filteredvertices = Keys@Select[<|vertexToCells|>,(Length[#]>2&)];
+filteredvertexnum = Length@filteredvertices;(* till above we have isolated all vertices that share 3 or more edges; 
 we can relabel those filtered vertices to be the rows of the matrix *)
- relabelvert=AssociationThread[filteredvertices-> Range[Length@filteredvertices]];(*all edges are relabeled to have a unique identity*)
- edgeLabels=AssociationThread[Range[Length@#]->#]&[nearestedgeEndPoints];
- edgenum=Max[Keys@edgeLabels];
- vertexCoordinatelookup=AssociationMap[Reverse,vertexAssoc];(* given vertex label \[Rule] get coordinates from the original lookup *)
- vertexpairs=Map[vertexAssoc,nearestedgeEndPoints,{2}];
+ relabelvert = AssociationThread[filteredvertices-> Range[Length@filteredvertices]]; (*edges relabeled to have a unique identity*)
+ edgeLabels = AssociationThread[Range[Length@#]->#]&[nearestedgeEndPoints];
+ edgenum = Max[Keys@edgeLabels];
+ vertexCoordinatelookup = AssociationMap[Reverse,vertexAssoc];(*given vertex label \[Rule] get coordinates from the original lookup*)
+ vertexpairs = Map[vertexAssoc,nearestedgeEndPoints,{2}];
 (* edge coordinates to vertex label. take vertices one by one and find all the edges it is a part of. None should be less than 3 *)
-vertexvertexConn= ParallelTable[
+vertexvertexConn = ParallelTable[
  Cases[vertexpairs,{OrderlessPatternSequence[i,p_]}:> {i,p}],
 {i,filteredvertices}];
 
-delV=Cases[vertexvertexConn,{{p_,_},{p_,_}}:> p];
-vertexvertexConn=DeleteCases[vertexvertexConn,{_,_}];
-inds=Flatten[vertexvertexConn,1];(* edgelabel \[Rule] vertices *)
-edgelabelToVert=Map[vertexAssoc,edgeLabels,{2}];
+delV = Cases[vertexvertexConn,{{p_,_},{p_,_}}:> p];
+vertexvertexConn = DeleteCases[vertexvertexConn,{_,_}];
+inds = Flatten[vertexvertexConn,1]; (* edgelabel \[Rule] vertices *)
+edgelabelToVert = Map[vertexAssoc,edgeLabels,{2}];
 (* vertices \[Rule] edgelabel *)
-vertToedges=Normal@AssociationMap[Reverse,edgelabelToVert];
-colsOrder=Flatten[Cases[vertToedges,PatternSequence[{OrderlessPatternSequence@@#}-> p_]:> p,Infinity]&/@inds];
-edgeImg=Graphics[{Thickness[0.005],Line@Lookup[vertexCoordinatelookup,edgelabelToVert[#]]&/@colsOrder}];
+vertToedges = Normal@AssociationMap[Reverse,edgelabelToVert];
+colsOrder = Flatten[Cases[vertToedges,PatternSequence[{OrderlessPatternSequence@@#}-> p_]:> p,Infinity]&/@inds];
+edgeImg = Graphics[{Thickness[0.005],Line@Lookup[vertexCoordinatelookup,edgelabelToVert[#]]&/@colsOrder}];
 
-{spArrayX,spArrayY,dimTx,dimPx}=formAndComputeMatrices[vertexCoordinatelookup,inds,colsOrder,edgenum,delV,vertexToCells,
+{spArrayX,spArrayY,dimTx,dimPx} = formAndComputeMatrices[vertexCoordinatelookup,inds,colsOrder,edgenum,delV,vertexToCells,
  vertexvertexConn,maxcellLabels,filteredvertices,vertexAssoc];
 p = maximizeLogLikelihood[spArrayX,spArrayY,dimTx,dimPx];
 plotMaps[p,segmentation,edgeImg,maxcellLabels,dimTx,vertexToCells,vertexCoordinatelookup,edgeLabels,Imgborder];
