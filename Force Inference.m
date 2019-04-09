@@ -16,19 +16,19 @@ WatershedComponents[binarizedMask, CornerNeighbors->False]
 
 (* Find intermediate pixels connecting two pixels *)
 bresenhamLine[p0_,p1_]:=Module[{dx,dy,sx,sy,err,newp},
-{dx,dy}=Abs[p1-p0];
-{sx,sy}=Sign[p1-p0];
-err=dx-dy;
+{dx,dy} = Abs[p1-p0];
+{sx,sy} = Sign[p1-p0];
+err = dx - dy;
 newp[{x_,y_}]:=With[{e2=2 err},{If[e2>-dy,err-=dy;x+sx,x],If[e2<dx,err+=dx;y+sy,y]}];
 NestWhileList[newp,p0,#=!=p1&,1]
 ];
 
 (* Artifically close cells if the surrounding/peripheral cells are open *)
-closeImage[image_]:=Module[{morphImage, morphImagePos,posConv,ptsOrdered},
-morphImage=MorphologicalTransform[image,"SkeletonEndPoints"];
-morphImagePos=PixelValuePositions[morphImage,1];
+closeImage[image_] := Module[{morphImage, morphImagePos,posConv,ptsOrdered},
+morphImage = MorphologicalTransform[image,"SkeletonEndPoints"];
+morphImagePos = PixelValuePositions[morphImage,1];
 posConv = With[{mean=Mean@N@morphImagePos},
-ptsOrdered=Append[#,First@#]&[SortBy[morphImagePos,ArcTan@@(mean-#)&]];
+ptsOrdered = Append[#,First@#]&[SortBy[morphImagePos,ArcTan@@(mean-#)&]];
 DeleteDuplicates@Flatten[bresenhamLine@@@Partition[ptsOrdered,2,1,1],1]
 ];
 ReplacePixelValue[image,posConv-> 1]
@@ -42,7 +42,8 @@ meanVertices,Fn},
 pts = ImageValuePositions[MorphologicalTransform[img,{"Fill","SkeletonBranchPoints"}], 1];
 (* finding branch points *)
 members = ParallelMap[Block[{elems},
- elems = Dilation[ReplaceImageValue[ConstantImage[0,Reverse@dim],#->1],1];DeleteCases[Union@Flatten@ImageData[elems*Image[segt]],0|0.]
+ elems = Dilation[ReplaceImageValue[ConstantImage[0,Reverse@dim],#->1],1];
+ DeleteCases[Union@Flatten@ImageData[elems*Image[segt]],0|0.]
  ]&,pts]; 
 vertices = Cases[Thread[Round@members-> pts],HoldPattern[pattern:{__}/;Length@pattern >= 2 -> _]];
 (* vertices with 2 or more neighbour cells *)
@@ -75,55 +76,56 @@ KeyMap[Union@*Flatten]@vertexset//Normal]
 formAndComputeMatrices[vertexCoordinatelookup_,inds_,colsOrder_,edgenum_,delV_,vertexToCells_,vertexvertexConn_,
 maxcellLabels_,filteredvertices_,vertexAssoc_]:= 
 Module[{tx,ty,tensinds,filteredvertexnum,relabelvert,spArrayTx,spArrayTy,spArrayPx,spArrayPy,spArrayX,spArrayY,$filteredvertices},
-{tx,ty}=Transpose[
-With[{target=vertexCoordinatelookup[#[[2]]],source=vertexCoordinatelookup[#[[1]]]},
-(target-source)/Norm[target-source]
+{tx,ty} = Transpose[
+ With[{target=vertexCoordinatelookup[#[[2]]],source=vertexCoordinatelookup[#[[1]]]},
+ (target-source)/Norm[target-source]
 ]&/@inds];
 Print["Tension coefficients computed: ",Style["\[CheckmarkedBox]",20]];
 MapThread[Print[Style["counts of zero coefficients "<>#1,Red], Count[#2,0.]]&,{{"Tx: ","Ty: "},{tx,ty}}];
-$filteredvertices=Complement[filteredvertices,delV];
-filteredvertexnum=Length@$filteredvertices;
-relabelvert=AssociationThread[$filteredvertices-> Range[Length@$filteredvertices]];
-tensinds=Thread[{Lookup[relabelvert,Part[inds,All,1]],colsOrder}];
-spArrayTx=spArrayTy=SparseArray@ConstantArray[0,{filteredvertexnum,edgenum}];
+$filteredvertices = Complement[filteredvertices,delV];
+filteredvertexnum = Length@$filteredvertices;
+relabelvert = AssociationThread[$filteredvertices -> Range[Length@$filteredvertices]];
+tensinds = Thread[{Lookup[relabelvert,Part[inds,All,1]],colsOrder}];
+spArrayTx = spArrayTy=SparseArray@ConstantArray[0,{filteredvertexnum,edgenum}];
 MapThread[(spArrayTx[[Sequence@@#1]]=#2)&,{tensinds,tx}];
 MapThread[(spArrayTy[[Sequence@@#1]]=#2)&,{tensinds,ty}];
-spArrayPx=spArrayPy=SparseArray@ConstantArray[0,{filteredvertexnum,maxcellLabels}];
+spArrayPx = spArrayPy = SparseArray@ConstantArray[0,{filteredvertexnum,maxcellLabels}];
 MapThread[Print[Style[#1<> "coefficients stats: ",Blue],Counts@Map[Total@*Unitize,Normal[#2]]]&,{{"Tx ", "Ty "},{spArrayTx,spArrayTy}}];
 Print[Style["Tension coefficients dist: ",Bold],
  Histogram[{{},Join[spArrayTx["NonzeroValues"],spArrayTy["NonzeroValues"]]},20,ImageSize->Small]];
-Block[{neighbouringCells,bisectionlabels,bisectpts,centroid,orderingT,vertexcoords,orderptsT,orderIndT,orderCells,kk=0,px,py},
-With[{cellToVertexLabelsT= Reverse[vertexToCells,2], edgeVertexPart=GroupBy[vertexvertexConn~Flatten~1 ,First-> Last]},
-With[{cellToAllVerticesT= GroupBy[Flatten[Thread/@cellToVertexLabelsT],First-> Last]},
+Block[{neighbouringCells,bisectionlabels,bisectpts,centroid,orderingT,vertexcoords,orderptsT,orderIndT,orderCells,kk = 0,px,py},
+With[{cellToVertexLabelsT = Reverse[vertexToCells,2], edgeVertexPart = GroupBy[vertexvertexConn~Flatten~1,First->Last]},
+With[{cellToAllVerticesT = GroupBy[Flatten[Thread/@cellToVertexLabelsT], First-> Last]},
 Do[
-neighbouringCells= vertexToCells[[i,2]]; (* for vertex, the neighbouring cell labels *)
-bisectionlabels=Intersection[cellToAllVerticesT[#],edgeVertexPart[i]]&/@neighbouringCells;
+neighbouringCells = vertexToCells[[i,2]]; (* for vertex, the neighbouring cell labels *)
+bisectionlabels = Intersection[cellToAllVerticesT[#],edgeVertexPart[i]]&/@neighbouringCells;
 If[Length[neighbouringCells]>2 && MatchQ[bisectionlabels,{Repeated[{_,_},{3,\[Infinity]}]}],
-(vertexcoords=DeleteDuplicates[vertexCoordinatelookup[#]&/@Flatten@bisectionlabels];
-centroid=Mean@vertexcoords;
-orderingT=Ordering[ArcTan[Last@#-Last@centroid,First@#-First@centroid]&/@vertexcoords];
-orderptsT=vertexcoords[[orderingT]];
-orderIndT=Partition[Lookup[vertexAssoc,Append[orderptsT,First@orderptsT]],2,1];
-orderCells=Last@@@Position[(x\[Function] Map[Intersection[x,#]&,orderIndT])/@(cellToAllVerticesT[#]&/@neighbouringCells),
+(vertexcoords = DeleteDuplicates[vertexCoordinatelookup[#]&/@Flatten@bisectionlabels];
+centroid = Mean@vertexcoords;
+orderingT = Ordering[ArcTan[Last@#-Last@centroid,First@#-First@centroid]&/@vertexcoords];
+orderptsT = vertexcoords[[orderingT]];
+orderIndT = Partition[Lookup[vertexAssoc,Append[orderptsT,First@orderptsT]],2,1];
+orderCells = Last@@@Position[(x\[Function] Map[Intersection[x,#]&,orderIndT])/@(cellToAllVerticesT[#]&/@neighbouringCells),
  x_/;Length[x]==2];
-neighbouringCells=neighbouringCells[[orderCells]];
-bisectpts=Map[vertexCoordinatelookup,orderIndT,{2}];
-{px,py}=Transpose[{(#[[2,2]]-#[[1,2]])/2,-(#[[2,1]]-#[[1,1]])/2}&/@bisectpts];
+neighbouringCells = neighbouringCells[[orderCells]];
+bisectpts = Map[vertexCoordinatelookup,orderIndT,{2}];
+{px,py} = Transpose[{(#[[2,2]]-#[[1,2]])/2,-(#[[2,1]]-#[[1,1]])/2}&/@bisectpts];
 If[MemberQ[px,0.]||MemberQ[py,0.],kk++];
 {px,py})
 ];
-Scan[(spArrayPx[[ Sequence@@#[[1]] ]]=#[[2]])&,Thread[Thread[{relabelvert@i,neighbouringCells}]-> px]];
-Scan[(spArrayPy[[ Sequence@@#[[1]] ]]=#[[2]])&,Thread[Thread[{relabelvert@i,neighbouringCells}]-> py]],{i,$filteredvertices}]
+Scan[(spArrayPx[[ Sequence@@#[[1]] ]]=#[[2]])&, Thread[Thread[{relabelvert@i,neighbouringCells}]-> px]];
+Scan[(spArrayPy[[ Sequence@@#[[1]] ]]=#[[2]])&, Thread[Thread[{relabelvert@i,neighbouringCells}]-> py]],
+ {i,$filteredvertices}]
  ]
 ];
-Print["Pressure coefficients computed: ",Style["\[CheckmarkedBox]",20]];
-Print[Style["Pressure coefficients zero: ",Red],kk];
+Print["Pressure coefficients computed: ", Style["\[CheckmarkedBox]",20]];
+Print[Style["Pressure coefficients zero: ", Red],kk];
 ];
 MapThread[Print[Style[#1<> "coefficients stats: ",Blue],Counts@Map[Total@*Unitize,Normal[#2]]]&,{{"Px ", "Py "},{spArrayPx,spArrayPy}}];
-Print[Style["pressure coefficients dist: ",Bold],
+Print[Style["pressure coefficients dist: ", Bold],
  Histogram[{{},Join[spArrayPx["NonzeroValues"],spArrayPy["NonzeroValues"]]},ImageSize->Small]];
-spArrayX=Join[spArrayTx,spArrayPx,2];
-spArrayY=Join[spArrayTy,spArrayPy,2];
+spArrayX = Join[spArrayTx,spArrayPx,2];
+spArrayY = Join[spArrayTy,spArrayPy,2];
 {spArrayX,spArrayY,Dimensions[spArrayTx],Dimensions[spArrayPx]}
 ];
 
@@ -131,70 +133,70 @@ spArrayY=Join[spArrayTy,spArrayPy,2];
 maximizeLogLikelihood[spArrayX_,spArrayY_,dimTx_,dimPx_]:= Module[{range=10.0^Range[-1.5,1.5,0.1],sol,spA,spg,spB,n,m,
 spb,\[Tau],SMatrix,Q,R,H,h,logL,\[Mu],p},
 Print[Style["\nwith maximum likelihood",Bold,18]];
-sol=With[{ls=range},
+sol = With[{ls=range},
 (*spA=SparseArray@(Join[spArrayX,spArrayY]);*)
-spA=SparseArray@(Flatten[Transpose[{spArrayX,spArrayY}],1]);
-spg=SparseArray@(ConstantArray[1.,Last@dimTx]~Join~ConstantArray[0.,Last@dimPx]);
-spB=SparseArray@DiagonalMatrix[spg];
-n=First@Dimensions@spA;
-m=(Length[#]-Total@#)&@Diagonal[spB\[Transpose].spB];
+spA = SparseArray@(Flatten[Transpose[{spArrayX,spArrayY}],1]);
+spg = SparseArray@(ConstantArray[1.,Last@dimTx]~Join~ConstantArray[0.,Last@dimPx]);
+spB = SparseArray@DiagonalMatrix[spg];
+n = First@Dimensions@spA;
+m = (Length[#]-Total@#)&@Diagonal[spB\[Transpose].spB];
 With[{DimspB=First[Dimensions@spB]},
-spb=SparseArray@ConstantArray[0.,First[Dimensions@spA]];
+spb = SparseArray@ConstantArray[0.,First[Dimensions@spA]];
 Table[(\[Tau]=Sqrt[\[Mu]];
-SMatrix=SparseArray@(Map[Flatten]@Transpose[{Join[spA,\[Tau] spB],Join[spb,\[Tau] spg]},{2,1}]);
-{Q,R}=SparseArray/@QRDecomposition[SMatrix];
-R=DiagonalMatrix[Sign[Diagonal@R]].R;
-H=R[[;;#,;;#]]&@DimspB;
-\!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\)=R[[;;#,#+1]]&@DimspB;
-h=R[[#+1,#+1]]&@DimspB;
-logL=-(n-m+1)*Log[h^2]+Total[Log[Diagonal[\[Mu] (spB\[Transpose].spB)]["NonzeroValues"]]]-
+SMatrix = SparseArray@(Map[Flatten]@Transpose[{Join[spA,\[Tau] spB],Join[spb,\[Tau] spg]},{2,1}]);
+{Q,R} = SparseArray/@QRDecomposition[SMatrix];
+R = DiagonalMatrix[Sign[Diagonal@R]].R;
+H = R[[;;#,;;#]]&@DimspB;
+\!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\) = R[[;;#,#+1]]&@DimspB;
+h = R[[#+1,#+1]]&@DimspB;
+logL = -(n-m+1)*Log[h^2]+Total[Log[Diagonal[\[Mu] (spB\[Transpose].spB)]["NonzeroValues"]]] -
  2*Total[Log[Diagonal[H[[1;;-2,1;;-2]]]["NonzeroValues"]]]),{\[Mu],ls}]
 ]
 ];
-Print[ListPlot[{sol,sol},Joined-> {True,False},PlotStyle->{{Red,Thick},{PointSize[0.02],Black}},AxesStyle->{{Black},{Black}},
+Print[ListPlot[{sol,sol}, Joined-> {True,False}, PlotStyle->{{Red,Thick},{PointSize[0.02],Black}}, AxesStyle->{{Black},{Black}},
 AxesLabel->{"index \[Mu]","LogLikelihood"},Background->LightBlue]];
-\[Mu]=Keys@@MaximalBy[Thread[range-> sol],Values,1];
+\[Mu] = Keys@@MaximalBy[Thread[range-> sol],Values,1];
 Print["optimized value of \[Mu]: ",\[Mu]];
-\[Tau]=Sqrt[\[Mu]];
-With[{DimspB=First[Dimensions@spB]},
-SMatrix=SparseArray@(Map[Flatten]@Transpose[{Join[spA,\[Tau] spB],Join[spb,\[Tau] spg]},{2,1}]);
-{Q,R}=SparseArray/@QRDecomposition[SMatrix];
-R=DiagonalMatrix[Sign[Diagonal@R]].R;
-H=R[[;;#,;;#]]&@DimspB;
-\!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\)=R[[;;#,#+1]]&@DimspB;
+\[Tau] = Sqrt[\[Mu]];
+With[{DimspB = First[Dimensions@spB]},
+ SMatrix = SparseArray@(Map[Flatten]@Transpose[{Join[spA,\[Tau] spB],Join[spb,\[Tau] spg]},{2,1}]);
+ {Q,R} = SparseArray/@QRDecomposition[SMatrix];
+ R = DiagonalMatrix[Sign[Diagonal@R]].R;
+ H = R[[;;#,;;#]]&@DimspB;
+ \!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\)=R[[;;#,#+1]]&@DimspB;
 ];
-p=PseudoInverse[H].\!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\); p
+p = PseudoInverse[H].\!\(\*OverscriptBox[\(h\), \(\[RightVector]\)]\); p
 ];
 
 (* Generate plots for tension and pressure map *)
 plotMaps[p_,segmentation_,edgeImg_,maxcellLabels_,dimTx_,vertexToCells_,vertexCoordinatelookup_,edgeLabels_,border_]:= 
 Module[{cellToVertexLabels,cellToAllVertices,ptsEdges,k,v,ord,edgeptAssoc,poly,pts,mean,ordering,orderpts,tvals,cols,pvals,
 removecollabels,collabels,pressurecolours},
-cellToVertexLabels= Reverse[vertexToCells,2];
-cellToAllVertices= GroupBy[Flatten[Thread/@cellToVertexLabels],First-> Last];
-ptsEdges ={{1,1},Reverse@Dimensions[segmentation],{Last[Dimensions@segmentation],1},{1,First[Dimensions@segmentation]}};
-{k,v}={Keys@#,Values[#][[All,2]]}&@ComponentMeasurements[segmentation,{"AdjacentBorderCount","Centroid"},#==2&];
-ord=Flatten[Function[x,Position[#,Min[#]]&@Map[EuclideanDistance[#,x]&,ptsEdges]]/@v];
-edgeptAssoc=Association[Rule@@@Thread[{k,ptsEdges[[ord]]}]];
+cellToVertexLabels = Reverse[vertexToCells,2];
+cellToAllVertices = GroupBy[Flatten[Thread/@cellToVertexLabels],First-> Last];
+ptsEdges = {{1,1},Reverse@Dimensions[segmentation],{Last[Dimensions@segmentation],1},{1,First[Dimensions@segmentation]}};
+{k,v} = {Keys@#,Values[#][[All,2]]}&@ComponentMeasurements[segmentation,{"AdjacentBorderCount","Centroid"},#==2&];
+ord = Flatten[Function[x,Position[#,Min[#]]&@Map[EuclideanDistance[#,x]&,ptsEdges]]/@v];
+edgeptAssoc = Association[Rule@@@Thread[{k,ptsEdges[[ord]]}]];
 (* polygons *)
-poly=(
- pts=vertexCoordinatelookup/@cellToAllVertices[#];
+poly = (
+ pts = vertexCoordinatelookup/@cellToAllVertices[#];
  If[MemberQ[k,#],AppendTo[pts,edgeptAssoc[#]],pts];
- mean=Mean[pts];
- ordering=Ordering[ArcTan[Last@#-Last@mean,First@#-First@mean]&/@pts];
- orderpts=pts[[ordering]];
+ mean = Mean[pts];
+ ordering = Ordering[ArcTan[Last@#-Last@mean,First@#-First@mean]&/@pts];
+ orderpts = pts[[ordering]];
  Polygon@Append[orderpts,First@orderpts]
 )&/@Range[maxcellLabels];
-tvals=Rescale@p[[1;;Last@dimTx]];
-cols=ColorData["Rainbow"][#]&/@tvals;
+tvals = Rescale@p[[1;;Last@dimTx]];
+cols = ColorData["Rainbow"][#]&/@tvals;
 Print["Tension map:"];
 Print[Graphics[{Thickness[0.005],Riffle[cols,Line/@Values@edgeLabels]}]];
-pvals=p[[ Last[dimTx]+1;;]];
-removecollabels = If[border, Keys@ComponentMeasurements[segmentation,"AdjacentBorders",Length[#]>0&],
+pvals = p[[ Last[dimTx]+1;;]];
+removecollabels = If[border,Keys@ComponentMeasurements[segmentation,"AdjacentBorders",Length[#]>0&],
 Values@Last@ComponentMeasurements[Dilation[segmentation,1]/. 0 -> (maxcellLabels + 1),"Neighbors"]
 ];
-collabels=Complement[Range@maxcellLabels,removecollabels];
-pressurecolours=ColorData["Rainbow"][#]&/@Rescale[(pvals[[collabels]])];
+collabels = Complement[Range@maxcellLabels,removecollabels];
+pressurecolours = ColorData["Rainbow"][#]&/@Rescale[(pvals[[collabels]])];
 Print["Pressure map:"];
 Print@Show[Graphics@Riffle[pressurecolours,poly[[collabels]]],edgeImg]
 ];
