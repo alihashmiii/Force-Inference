@@ -86,7 +86,7 @@ $filteredvertices = Complement[filteredvertices,delV];
 filteredvertexnum = Length@$filteredvertices;
 relabelvert = AssociationThread[$filteredvertices -> Range[Length@$filteredvertices]];
 tensinds = Thread[{Lookup[relabelvert,Part[inds,All,1]],colsOrder}];
-spArrayTx = spArrayTy=SparseArray@ConstantArray[0,{filteredvertexnum,edgenum}];
+spArrayTx = spArrayTy = SparseArray@ConstantArray[0,{filteredvertexnum,edgenum}];
 MapThread[(spArrayTx[[Sequence@@#1]]=#2)&,{tensinds,tx}];
 MapThread[(spArrayTy[[Sequence@@#1]]=#2)&,{tensinds,ty}];
 spArrayPx = spArrayPy = SparseArray@ConstantArray[0,{filteredvertexnum,maxcellLabels}];
