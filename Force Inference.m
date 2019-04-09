@@ -172,11 +172,11 @@ Module[{cellToVertexLabels,cellToAllVertices,ptsEdges,k,v,ord,edgeptAssoc,poly,p
 removecollabels,collabels,pressurecolours},
 cellToVertexLabels= Reverse[vertexToCells,2];
 cellToAllVertices= GroupBy[Flatten[Thread/@cellToVertexLabels],First-> Last];
-(* polygons *)
 ptsEdges ={{1,1},Reverse@Dimensions[segmentation],{Last[Dimensions@segmentation],1},{1,First[Dimensions@segmentation]}};
 {k,v}={Keys@#,Values[#][[All,2]]}&@ComponentMeasurements[segmentation,{"AdjacentBorderCount","Centroid"},#==2&];
 ord=Flatten[Function[x,Position[#,Min[#]]&@Map[EuclideanDistance[#,x]&,ptsEdges]]/@v];
 edgeptAssoc=Association[Rule@@@Thread[{k,ptsEdges[[ord]]}]];
+(* polygons *)
 poly=(
  pts=vertexCoordinatelookup/@cellToAllVertices[#];
  If[MemberQ[k,#],AppendTo[pts,edgeptAssoc[#]],pts];
