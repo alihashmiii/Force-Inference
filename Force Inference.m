@@ -185,12 +185,10 @@ poly=(
  orderpts=pts[[ordering]];
  Polygon@Append[orderpts,First@orderpts]
 )&/@Range[maxcellLabels];
-
 tvals=Rescale@p[[1;;Last@dimTx]];
 cols=ColorData["Rainbow"][#]&/@tvals;
 Print["Tension map:"];
 Print[Graphics[{Thickness[0.005],Riffle[cols,Line/@Values@edgeLabels]}]];
-
 pvals=p[[ Last[dimTx]+1;;]];
 removecollabels = If[border, Keys@ComponentMeasurements[segmentation,"AdjacentBorders",Length[#]>0&],
 Values@Last@ComponentMeasurements[Dilation[segmentation,1]/. 0 -> (maxcellLabels + 1),"Neighbors"]
