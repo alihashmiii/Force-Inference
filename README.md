@@ -4,13 +4,11 @@
 
 see my Wolfram Community post for more information: https://community.wolfram.com/groups/-/m/t/1571507
 
-This is a Mathematica implementation of the `Bayesian Force Inference` technique by Ishihara and Sugimura (Journal of Theoretical Biology, 2012). The script file `Force Inference.m` will infer tension between epithelial cells and the pressure within the cells by using a binarized image of an epithelia.
+This is a Mathematica implementation of the `Bayesian Force Inference` technique by Ishihara and Sugimura (Journal of Theoretical Biology, 2012). The script files/notebooks  located in the  `main` folder will infer tension for edges between epithelial cells and the pressure within the cells. The input is a binarized image of an epithelia.
 
 ##### Please note that the borders of the image used below for the demo, `image.tif` (inside for ReadMe folder), have pixels that are filled. 
 
 https://www.biorxiv.org/content/early/2018/11/23/475012 (for more details, check recent work by Lenne Lab)
-
-###### The notebook (.nb file) contains the same code as the script file. The only difference is that I have included some auxiliary parts in the notebook to check the robustness of detection of vertices and some visualizations to ensure the implementation is fool-proof. The extra results are included in `robustness check.pdf`
 
 
 
